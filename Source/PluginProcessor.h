@@ -64,7 +64,7 @@ public:
   void prepareToPlay(double sampleRate, int samplesPerBlock) override
   {
     juce::dsp::ProcessSpec spec{sampleRate, static_cast<juce::uint32>(samplesPerBlock), 2};
-    
+
     juce::dsp::IIR::Coefficients<float>::Ptr coefficients;
     if (type == "peakFilter")
     {
@@ -338,10 +338,12 @@ public:
   void connectAudioNodes();
 
   void connectMidiNodes();
-  
+
   void processText(const juce::String &text);
 
   void processInOrder(juce::dsp::AudioBlock<float> &block);
+
+  juce::AudioProcessorValueTreeState parameters;
 
 private:
   //==============================================================================
@@ -351,5 +353,7 @@ private:
   juce::AudioProcessorGraph::Node::Ptr audioOutputNode;
   juce::AudioProcessorGraph::Node::Ptr midiInputNode;
   juce::AudioProcessorGraph::Node::Ptr midiOutputNode;
+  juce::dsp::DryWetMixer<float> mixer;
+
   juce::dsp::ProcessSpec spec;
 };

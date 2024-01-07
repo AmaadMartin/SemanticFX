@@ -21,7 +21,11 @@ SemanticEQAudioProcessor::SemanticEQAudioProcessor()
 #endif
                          ),
 #endif
-      mainProcessor(new juce::AudioProcessorGraph())
+      mainProcessor(new juce::AudioProcessorGraph()) ,
+      parameters(*this, nullptr, juce::Identifier("PARAMETERS"),
+                 {
+                     std::make_unique<juce::AudioParameterFloat>("mix", "Mix", 0.0f, 1.0f, 0.5f)
+                    })
 {
 }
 
@@ -104,6 +108,8 @@ void SemanticEQAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
 
     mainProcessor->prepareToPlay(sampleRate, samplesPerBlock);
     initialiseGraph();
+
+    mixer.prepare(spec);
 }
 
 void SemanticEQAudioProcessor::initialiseGraph()
@@ -273,8 +279,12 @@ void SemanticEQAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer, ju
         buffer.clear(i, 0, buffer.getNumSamples());
 
     // juce::dsp::AudioBlock<float> block(buffer);
+    mixer.setWetMixProportion(parameters.getRawParameterValue("mix")->load());
+    mixer.pushDrySamples(buffer);
 
     mainProcessor->processBlock(buffer, midiMessages);
+
+    mixer.mixWetSamples(buffer);
 }
 
 //==============================================================================

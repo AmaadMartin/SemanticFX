@@ -11,7 +11,7 @@
 
 //==============================================================================
 SemanticEQAudioProcessorEditor::SemanticEQAudioProcessorEditor(SemanticEQAudioProcessor &p)
-    : AudioProcessorEditor(&p), audioProcessor(p)
+    : AudioProcessorEditor(&p), audioProcessor(p), valueTreeState(p.parameters)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -37,6 +37,15 @@ SemanticEQAudioProcessorEditor::SemanticEQAudioProcessorEditor(SemanticEQAudioPr
     generateButton.setButtonText("Generate");
     generateButton.addListener(this);
     addAndMakeVisible(generateButton);
+
+    mixSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
+    mixSlider.setRange(0.0, 1.0, 0.01);
+    mixSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 100, 20);
+
+    // Add the slider to the editor
+    addAndMakeVisible(mixSlider);
+    mixSliderAttachment.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "mix", mixSlider));
+
 }
 
 SemanticEQAudioProcessorEditor::~SemanticEQAudioProcessorEditor()
@@ -63,6 +72,7 @@ void SemanticEQAudioProcessorEditor::resized()
     textEditor.setBounds(area.removeFromTop(20));
     generateButton.setBounds(area.removeFromTop(20));
     eqInterpolationSlider.setBounds(area);
+    mixSlider.setBounds(area.reduced(40));
 }
 
 void SemanticEQAudioProcessorEditor::sliderValueChanged(juce::Slider *slider)
