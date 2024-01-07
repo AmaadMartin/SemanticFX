@@ -303,6 +303,10 @@ public:
   void prepareToPlay(double sampleRate, int samplesPerBlock) override;
   void releaseResources() override;
 
+  std::string createConversation();
+
+  std::string getCurrentState();
+
 #ifndef JucePlugin_PreferredChannelConfigurations
   bool isBusesLayoutSupported(const BusesLayout &layouts) const override;
 #endif
@@ -354,6 +358,7 @@ private:
   juce::AudioProcessorGraph::Node::Ptr midiInputNode;
   juce::AudioProcessorGraph::Node::Ptr midiOutputNode;
   juce::dsp::DryWetMixer<float> mixer;
+  std::string threadId = "";
 
   juce::dsp::ProcessSpec spec;
 };

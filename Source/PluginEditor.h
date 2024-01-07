@@ -26,6 +26,7 @@ public:
   void paint(juce::Graphics &) override;
   void resized() override;
   void sliderValueChanged(juce::Slider *slider) override;
+  void setMessageContent(const juce::String& newText);
   void buttonClicked(juce::Button *button) override;
 
 private:
@@ -34,6 +35,7 @@ private:
   SemanticEQAudioProcessor &audioProcessor;
   juce::Slider eqInterpolationSlider;
   juce::TextEditor textEditor;
+  juce::TextEditor chat;
   juce::TextButton generateButton;
 
   juce::AudioProcessorValueTreeState &valueTreeState;

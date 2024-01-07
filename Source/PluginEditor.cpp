@@ -23,6 +23,14 @@ SemanticEQAudioProcessorEditor::SemanticEQAudioProcessorEditor(SemanticEQAudioPr
     // eqInterpolationSlider.addListener(this);
     // addAndMakeVisible(eqInterpolationSlider);
 
+    //Initialize and configure chat
+    chat.setMultiLine(true);
+    chat.setReadOnly(true);
+    chat.setScrollbarsShown(true);
+    chat.setCaretVisible(false);
+    chat.setPopupMenuEnabled(true);
+    addAndMakeVisible(chat);
+
     // Initialize and configure text editor
     textEditor.setMultiLine(false);
     textEditor.setReturnKeyStartsNewLine(false);
@@ -38,7 +46,7 @@ SemanticEQAudioProcessorEditor::SemanticEQAudioProcessorEditor(SemanticEQAudioPr
     generateButton.addListener(this);
     addAndMakeVisible(generateButton);
 
-    mixSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
+    mixSlider.setSliderStyle(juce::Slider::SliderStyle::LinearHorizontal);
     mixSlider.setRange(0.0, 1.0, 0.01);
     mixSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 100, 20);
 
@@ -68,11 +76,22 @@ void SemanticEQAudioProcessorEditor::resized()
     // subcomponents in your editor..
 
     auto area = getLocalBounds();
-    eqInterpolationSlider.setBounds(area);
-    textEditor.setBounds(area.removeFromTop(20));
-    generateButton.setBounds(area.removeFromTop(20));
-    eqInterpolationSlider.setBounds(area);
-    mixSlider.setBounds(area.reduced(40));
+    const int buttonHeight = 30;  // Height for buttons and text editor
+    const int sliderHeight = 40;  // Height for sliders
+
+    // 1. Message Display (Chat) - Half of the height of the plugin window
+    chat.setBounds(area.removeFromTop(area.proportionOfHeight(0.5)));
+
+    // 2. Text Input - Below the chat
+    textEditor.setBounds(area.removeFromTop(buttonHeight));
+
+    // 3. Generate Button - Below the text input
+    generateButton.setBounds(area.removeFromTop(buttonHeight));
+
+    // 4. Mix Slider - Fill the remaining area
+    mixSlider.setBounds(area);
+
+    // If you have more components, adjust their bounds similarly
 }
 
 void SemanticEQAudioProcessorEditor::sliderValueChanged(juce::Slider *slider)
@@ -81,6 +100,10 @@ void SemanticEQAudioProcessorEditor::sliderValueChanged(juce::Slider *slider)
     {
         // audioProcessor.setInterpolation(eqInterpolationSlider.getValue());
     }
+}
+
+void SemanticEQAudioProcessorEditor::setMessageContent(const juce::String& newText) {
+    chat.setText(newText, juce::dontSendNotification);
 }
 
 void SemanticEQAudioProcessorEditor::buttonClicked(juce::Button *button)

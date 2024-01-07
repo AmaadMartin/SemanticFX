@@ -112,6 +112,29 @@ void SemanticEQAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
     mixer.prepare(spec);
 }
 
+// Function to make a POST request to the create-conversation API
+std::string SemanticEQAudioProcessor::createConversation() {
+    std::string url = "http://localhost:5000/create-conversation";
+    std::string command = "curl -X POST " + url;
+
+    // Execute the command and get the response
+    std::string response = "";
+
+    FILE *pipe = popen(command.c_str(), "r");
+    if (pipe)
+    {
+        char buffer[128];
+        while (!feof(pipe))
+        {
+            if (fgets(buffer, 128, pipe) != NULL)
+                response += buffer;
+        }
+        pclose(pipe);
+    }
+
+    return response;
+}
+
 void SemanticEQAudioProcessor::initialiseGraph()
 {
     mainProcessor->clear();
@@ -169,12 +192,21 @@ bool SemanticEQAudioProcessor::isBusesLayoutSupported(const BusesLayout &layouts
 }
 #endif
 
+std::string SemanticEQAudioProcessor::getCurrentState(){
+    return "";
+}
+
 void SemanticEQAudioProcessor::processText(const juce::String &text)
 {
+    if(threadId == ""){
+        threadId = createConversation();
+    }
+
     // Make API call to /get-params endpoint
     std::string url = "http://localhost:5000/get-params";
     std::string query = text.toStdString();
-    std::string command = "curl -X POST -H \"Content-Type: application/json\" -d '{\"query\": \"" + query + "\"}' " + url;
+    std::string currentState = " ";
+    std::string command = "curl -X POST -H \"Content-Type: application/json\" -d '{\"query\": \"" + query + "\", \"current_state\": \"" + currentState + "\", \"thread_id\": " + threadId + "}' " + url;
 
     // Execute the command and get the response
     std::string response = "";
@@ -194,7 +226,7 @@ void SemanticEQAudioProcessor::processText(const juce::String &text)
     juce::var result = juce::JSON::parse(response);
     if (result.isObject())
     {
-        juce::var parameters = result;
+        juce::var parameters = result["run_parameters"];
         // Print the parameters
         // std::cout << "Parameters: " << parameters.toString() << std::endl;
 
@@ -266,7 +298,33 @@ void SemanticEQAudioProcessor::processText(const juce::String &text)
                     node->getProcessor()->enableAllBuses();
             }
         }
+
+        juce::var messages = result["messages"];
+        juce::String formattedMessages;
+        if(messages.isArray()){
+            for (auto& messageObj : *messages.getArray()){
+                if (messageObj.isObject()) {
+                    juce::String sender = messageObj["role"].toString();
+                    juce::String message = messageObj["value"].toString();
+
+                    if (sender == "user"){
+                            formattedMessages += "You: " + message + "\n\n";    
+                        
+                    } else {
+                        formattedMessages += "SemanticEQ: " + message + "\n\n";
+                    }
+                }
+            }
+        }
+
+        juce::MessageManager::callAsync([this, formattedMessages]() {
+            if (auto* editor = dynamic_cast<SemanticEQAudioProcessorEditor*>(getActiveEditor())){
+                editor->setMessageContent(formattedMessages);
+            }
+        });
     }
+
+
 }
 
 void SemanticEQAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuffer &midiMessages)
